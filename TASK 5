@@ -1,0 +1,104 @@
+# ----------------------------------------------------
+# 🎯 Task 5: Handwritten Text Generation with RNN
+# 👨‍💻 Intern: Rishan . N
+# 🏫 Rajalakshmi Institute of Technology
+# 🏢 Internship at: CodSoft
+# ----------------------------------------------------
+
+import numpy as np
+import matplotlib.pyplot as plt
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import LSTM, Dense, Embedding
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+
+# 📝 Sample handwritten-style text data
+text = (
+    "dear friend,\n"
+    "i hope you are doing well. the weather has been lovely lately.\n"
+    "i enjoy walking through the garden every morning.\n"
+    "sincerely,\n"
+    "rishan"
+)
+
+# 📊 Character Frequency Plot
+char_freq = {}
+for c in text:
+    char_freq[c] = char_freq.get(c, 0) + 1
+
+plt.figure(figsize=(8, 4))
+plt.bar(char_freq.keys(), char_freq.values(), color="orchid")
+plt.title("Character Frequency Distribution")
+plt.xlabel("Character")
+plt.ylabel("Frequency")
+plt.tight_layout()
+plt.show()
+
+# 🔠 Character Mapping
+chars = sorted(set(text))
+char_to_idx = {c: i for i, c in enumerate(chars)}
+idx_to_char = {i: c for c, i in char_to_idx.items()}
+vocab_size = len(chars)
+
+# 📦 Create input sequences
+seq_length = 40
+step = 3
+sequences = []
+next_chars = []
+
+for i in range(0, len(text) - seq_length, step):
+    sequences.append(text[i:i + seq_length])
+    next_chars.append(text[i + seq_length])
+
+X = np.zeros((len(sequences), seq_length), dtype=np.int32)
+y = np.zeros((len(sequences), vocab_size), dtype=bool)
+
+for i, seq in enumerate(sequences):
+    for t, char in enumerate(seq):
+        X[i, t] = char_to_idx[char]
+    y[i, char_to_idx[next_chars[i]]] = 1
+
+# 🧠 Build the Model
+model = Sequential([
+    Embedding(input_dim=vocab_size, output_dim=64, input_length=seq_length),
+    LSTM(128),
+    Dense(vocab_size, activation='softmax')
+])
+model.compile(loss='categorical_crossentropy', optimizer='adam')
+
+# ⏱️ Train the Model
+model.fit(X, y, batch_size=16, epochs=30, verbose=0)
+
+# ✍️ Text Generation Function
+def generate_text(seed, gen_length=200):
+    generated = seed
+    for _ in range(gen_length):
+        input_seq = [char_to_idx.get(c, 0) for c in seed[-seq_length:]]
+        input_seq = pad_sequences([input_seq], maxlen=seq_length)
+        preds = model.predict(input_seq, verbose=0)[0]
+        next_index = np.random.choice(len(preds), p=preds)
+        next_char = idx_to_char[next_index]
+        generated += next_char
+        seed += next_char
+    return generated
+
+# 🧪 Test Generation
+seed_text = "dear friend,\ni hope you are "
+generated_output = generate_text(seed_text)
+
+# 🧾 Final Output
+print("\n----------------------------------------------------")
+print("🧠 Task 5 Completed: Handwritten-like Text Generation using RNN")
+print("👨‍💻 Submitted by: Rishan . N")
+print("🏫 Rajalakshmi Institute of Technology")
+print("🏢 Internship at: CodSoft")
+print("----------------------------------------------------\n")
+
+print("📝 Generated Text:\n")
+print(generated_output)
+
+print("\n----------------------------------------------------")
+print("👨‍💻 Submitted by: Rishan . N")
+print("🏫 Rajalakshmi Institute of Technology")
+print("🏢 Internship at: CodSoft")
+print("----------------------------------------------------")
